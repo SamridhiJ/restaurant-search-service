@@ -149,3 +149,4 @@ This api requires path variable `id` to be passed along with authorization beare
 ```
 curl -X GET "http://localhost:8080/item/id/<id>" -H "accept: */*" -H "authorization: <Bearer token>"
 ```
+# restaurantsearchservice
