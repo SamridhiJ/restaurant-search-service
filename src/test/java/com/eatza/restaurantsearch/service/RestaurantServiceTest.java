@@ -18,10 +18,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.eatza.restaurantsearch.dto.RestaurantRequestDto;
 import com.eatza.restaurantsearch.dto.RestaurantResponseDto;
@@ -34,7 +34,7 @@ import com.eatza.restaurantsearch.service.menuitemservice.MenuItemService;
 import com.eatza.restaurantsearch.service.menuservice.MenuService;
 import com.eatza.restaurantsearch.service.restaurantservice.RestaurantServiceImpl;
 
-@RunWith(SpringRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class RestaurantServiceTest {
 
 
@@ -68,7 +68,6 @@ public class RestaurantServiceTest {
 
 		Restaurant persistedRestaurant = restaurantService.saveRestaurant(restaurantDto);
 		Menu menu = new Menu(restaurantDto.getActiveFrom(), restaurantDto.getActiveTill(), persistedRestaurant);
-		when(menuService.saveMenu(any(Menu.class))).thenReturn(menu);
 		assertNotNull(persistedRestaurant);
 		assertEquals("Dominos",persistedRestaurant.getName());
 		assertEquals(400,persistedRestaurant.getBudget());
@@ -124,7 +123,6 @@ public class RestaurantServiceTest {
 		when(page.getTotalPages()).thenReturn(2);
 		when(page.getTotalElements()).thenReturn(10L);
 		when(restaurantRepository.findByLocationContainingAndCuisineContaining(any(String.class),any(String.class),any(Pageable.class))).thenReturn(page);
-		when(restaurantRepository.findByLocationContainingOrCuisineContaining(any(String.class),any(String.class),any(Pageable.class))).thenReturn(page);
 		RestaurantResponseDto dto = restaurantService.findByLocationAndCuisine("RR Nagar", "Italian", pageNumber, pageSize);
 		assertEquals("Dominos", dto.getRestaurants().get(0).getName());
 
@@ -141,7 +139,6 @@ public class RestaurantServiceTest {
 						, new Restaurant("RR Vatika", "RR Nagar", "North Indian", 200, 4.1)));
 		when(page.getTotalPages()).thenReturn(2);
 		when(page.getTotalElements()).thenReturn(10L);
-		when(restaurantRepository.findByLocationContainingAndNameContaining(any(String.class),any(String.class),any(Pageable.class))).thenReturn(page);
 		when(restaurantRepository.findByLocationContainingAndNameContaining(any(String.class),any(String.class),any(Pageable.class))).thenReturn(page);
 		RestaurantResponseDto dto = restaurantService.findByLocationAndName("RR Nagar", "Dominos", pageNumber, pageSize);
 		assertEquals("Dominos", dto.getRestaurants().get(0).getName());

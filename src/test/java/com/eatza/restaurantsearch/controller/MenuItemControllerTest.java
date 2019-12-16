@@ -1,135 +1,83 @@
 package com.eatza.restaurantsearch.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import com.eatza.restaurantsearch.dto.ItemRequestDto;
 import com.eatza.restaurantsearch.exception.ItemNotFoundException;
 import com.eatza.restaurantsearch.model.Menu;
 import com.eatza.restaurantsearch.model.MenuItem;
+import com.eatza.restaurantsearch.model.Restaurant;
 import com.eatza.restaurantsearch.service.menuitemservice.MenuItemService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-
-
-@RunWith(SpringRunner.class)
-@WebMvcTest(value= MenuItemController.class)
+@RunWith(MockitoJUnitRunner.class)
 public class MenuItemControllerTest {
 
-	@Autowired
-	private MockMvc mockMvc;
+	@InjectMocks
+	private MenuItemController menuItemController;
 
-	@MockBean
+	@Mock
 	private MenuItemService menuItemService;
 
-	@Autowired
-	private ObjectMapper objectMapper;
+	private static final String AUTHORIZATION = "t0k3n";
 
-	
-	String jwt="";
-	private static final long EXPIRATIONTIME = 900000;
 	@Before
 	public void setup() {
-		jwt = "Bearer "+Jwts.builder().setSubject("user").claim("roles", "user").setIssuedAt(new Date())
-				.signWith(SignatureAlgorithm.HS256, "secretkey").setExpiration(new Date(System.currentTimeMillis() + EXPIRATIONTIME)).compact();
+		MockitoAnnotations.initMocks(this);
 	}
-
-
-
 
 	@Test
 	public void addMenuItem() throws Exception {
+		Mockito.when(menuItemService.saveMenuItem(Mockito.any(ItemRequestDto.class))).thenReturn(new MenuItem());
+		assertEquals("Item Added successfully",
+				menuItemController.addItemsToRestaurantMenu(AUTHORIZATION, getItemRequest()).getBody());
+	}
+
+	@Test
+	public void getRestaurantsContainingItem() throws ItemNotFoundException {
+		List<Restaurant> restaurants = new ArrayList<>();
+		Mockito.when(menuItemService.findByName(Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt()))
+				.thenReturn(restaurants);
+		assertEquals(restaurants,
+				menuItemController.getRestaurantsContainingItem(AUTHORIZATION, "Dosa", 1, 10).getBody());
+	}
+
+	@Test
+	public void getItemById() throws Exception {
+		MenuItem menuItem = new MenuItem("Rajma", "Beans", 120, new Menu());
+		Optional<MenuItem> returnedItem = Optional.of(menuItem);
+		Mockito.when(menuItemService.findById(Mockito.anyLong())).thenReturn(returnedItem);
+		assertEquals(returnedItem.get(), menuItemController.getItemById(1L).getBody());
+
+	}
+
+	@Test(expected = ItemNotFoundException.class)
+	public void getItemById_empty() throws ItemNotFoundException {
+		when(menuItemService.findById(anyLong())).thenReturn(Optional.empty());
+		menuItemController.getItemById(1L);
+	}
+
+	private ItemRequestDto getItemRequest() {
 		ItemRequestDto requestDto = new ItemRequestDto();
 		requestDto.setDescription("Dosa");
 		requestDto.setMenuId(1L);
 		requestDto.setName("Onion Dosa");
 		requestDto.setPrice(200);
-		
-		when(menuItemService.saveMenuItem(any(ItemRequestDto.class))).thenReturn(new MenuItem());
-		RequestBuilder request = MockMvcRequestBuilders.post(
-				"/item")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString((requestDto)))
-				.header(HttpHeaders.AUTHORIZATION,
-						jwt);
-		mockMvc.perform(request)
-		.andExpect(status().is(200))
-		.andExpect(content().string("Item Added successfully"))
-		.andReturn();
+		return requestDto;
 	}
-	
-	@Test
-	public void getRestaurantsContainingItem() throws Exception {
-		
-		when(menuItemService.findByName(any(String.class),anyInt(), anyInt())).thenReturn(new ArrayList<>());
-		RequestBuilder request = MockMvcRequestBuilders.get(
-				"/restaurant/item/name/rajma?pagenumber=1&pagesize=10")
-				.accept(
-						MediaType.ALL)
-				.header(HttpHeaders.AUTHORIZATION,
-						jwt);
-		mockMvc.perform(request)
-		.andExpect(status().is(200))
-		
-		.andReturn();
-	}
-	
-	
-	@Test
-	public void getItemById() throws Exception {
-		MenuItem menuItem = new MenuItem("Rajma", "Beans", 120, new Menu());
-		Optional<MenuItem> returnedItem= Optional.of(menuItem);
-		when(menuItemService.findById(anyLong())).thenReturn(returnedItem);
-		RequestBuilder request = MockMvcRequestBuilders.get(
-				"/item/id/1?pagenumber=1&pagesize=10")
-				.accept(
-						MediaType.ALL)
-				.header(HttpHeaders.AUTHORIZATION,
-						jwt);
-		mockMvc.perform(request)
-		.andExpect(status().is(200))
-		
-		.andReturn();
-	}
-	
-	@Test
-	public void getItemById_empty() throws Exception {
-		when(menuItemService.findById(anyLong())).thenReturn(Optional.empty());
-		RequestBuilder request = MockMvcRequestBuilders.get(
-				"/item/id/1?pagenumber=1&pagesize=10")
-				.accept(
-						MediaType.ALL)
-				.header(HttpHeaders.AUTHORIZATION,
-						jwt);
-		mockMvc.perform(request)
-		.andExpect(status().is(404))
-		
-		.andReturn();
-	}
-
-
 
 }

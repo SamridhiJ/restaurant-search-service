@@ -4,32 +4,25 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger.web.UiConfiguration;
-
-@RunWith(SpringRunner.class)
-@ContextConfiguration(classes=SwaggerConfiguration.class)
+@RunWith(MockitoJUnitRunner.class)
+@ContextConfiguration(classes = SwaggerConfiguration.class)
 public class SwaggerDocketConfigurationTest {
-	
-	@Autowired
-	Docket docket;
-	
-	
-	@Autowired
-	UiConfiguration uiconfiguration;
-	
+
+	@InjectMocks
+	private SwaggerConfiguration swaggerConfig;
+
 	@Test
 	public void docketTest() {
-		assertNotNull(docket);
+		assertNotNull(swaggerConfig.api());
 	}
-	
+
 	@Test
 	public void uiconfigurationTest() {
-		assertNotNull(uiconfiguration);
+		assertNotNull(swaggerConfig.uiConfig());
 	}
 
 }
