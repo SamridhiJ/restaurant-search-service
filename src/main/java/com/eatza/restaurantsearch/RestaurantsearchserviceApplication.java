@@ -6,12 +6,14 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.annotation.EnableKafka;
 
 import com.eatza.restaurantsearch.config.JwtFilter;
 
 @SpringBootApplication
 @EnableCaching
 @EnableEurekaClient
+@EnableKafka
 //@EnableDiscoveryClient
 public class RestaurantsearchserviceApplication {
 
